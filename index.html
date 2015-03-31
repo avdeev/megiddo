@@ -12,6 +12,7 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/bootstrap-theme.min.css" rel="stylesheet">
     <link href="/css/dashboard.css" rel="stylesheet">
+    <link href="/css/application.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -38,11 +39,73 @@
 
     <div class="container-fluid">
       <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-          
+        <div class="col-sm-6 col-md-4 sidebar">
+          <form class="form-inline" id="input-data">
+            <div class="row">
+              <div class="col-xs-12 btn-calculate">
+                <button type="button" class="btn btn-primary btn-lg" id="calculate">Найти максимум</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <h4>Целевая функция</h4>
+              </div>
+            </div>
+            <div class="row" id='function'>
+              <div class="col-xs-12">
+                <div class="form-group">
+                  <div class="input-group">
+                    <input type="text" class="form-control" maxlength="3" placeholder="c[0]">
+                    <div class="input-group-addon">x</div>
+                  </div>
+                  <div class="input-group">
+                    <div class="input-group-addon">+</div>
+                    <input type="text" class="form-control" maxlength="3" placeholder="c[1]">
+                    <div class="input-group-addon">y</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <h4>Ограничения</h4>
+              </div>
+            </div>
+            <div id="restrictions">
+              <div class="row restriction">
+                <div class="col-xs-12">
+                  <div class="form-group">
+                    <div class="input-group number"></div>
+                    <div class="input-group">
+                      <input type="text" class="form-control" maxlength="3" placeholder="a[0]">
+                      <div class="input-group-addon">x</div>
+                    </div>
+                    <div class="input-group">
+                      <div class="input-group-addon">+</div>
+                      <input type="text" class="form-control" maxlength="3" placeholder="a[1]">
+                      <div class="input-group-addon">y</div>
+                    </div>
+                    <div class="input-group">
+                      <div class="input-group-addon"><=</div>
+                      <input type="text" class="form-control" maxlength="3" placeholder="b">
+                      <div class="input-group-addon">b</div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-danger remove">
+                    <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <button type="button" class="btn btn-success" id="restrictions-add">Добавить ограничение</button>
+              </div>
+            </div>
+          </form>
         </div>
 
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-sm-6 col-sm-offset-6 col-md-8 col-md-offset-4 main">
            
         </div>
       </div>
@@ -50,5 +113,6 @@
 
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/application.js"></script>
   </body>
 </html>

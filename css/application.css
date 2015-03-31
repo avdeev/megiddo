@@ -1,0 +1,20 @@
+.sidebar .row {
+  margin-bottom: 15px;
+}
+
+.btn-calculate {
+  text-align: center;
+}
+
+#function input[type='text'],
+#restrictions input[type='text'] {
+  width: 50px;
+}
+
+#restrictions {
+  counter-reset: list;
+}
+#restrictions .number:before {
+  counter-increment: list;
+  content: counter(list) ".";
+}
