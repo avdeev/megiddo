@@ -44,7 +44,8 @@ $ ->
         when 'b'
           App.b.push value
 
-    console.log App
+    App.megiddoSolver = new App.MegiddoSolver App.a, App.b, App.c
+    App.megiddoSolver.solve()
 
   $('#load-file').on 'click', ->
     if App.a and App.b and App.c

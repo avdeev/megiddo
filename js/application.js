@@ -61,7 +61,8 @@
             App.b.push(value);
         }
       }
-      return console.log(App);
+      App.megiddoSolver = new App.MegiddoSolver(App.a, App.b, App.c);
+      return App.megiddoSolver.solve();
     });
     return $('#load-file').on('click', function() {
       var i, _, _i, _len, _ref, _results;
