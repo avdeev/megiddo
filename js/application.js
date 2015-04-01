@@ -1,21 +1,81 @@
 (function() {
   $(function() {
-    var $restrictions, restrictionTemplate;
+    var $formInputData, $function, $restrictions, addRestriction, restrictionTemplate, setFunction;
     $restrictions = $('#restrictions');
-    $('#input-data').on('submit', function(e) {
-      return e.preventDefault();
-    });
-    $('#calculate').on('click', function() {
-      return console.log('Вычислить');
-    });
-    restrictionTemplate = '<div class="row restriction" style="margin-bottom: 15px;">\n  <div class="col-xs-12">\n    <div class="form-group">\n      <div class="input-group number"></div>\n      <div class="input-group">\n        <input type="text" class="form-control" maxlength="3" placeholder="a[0]" style="width: 50px;">\n        <div class="input-group-addon">x</div>\n      </div>\n      <div class="input-group">\n        <div class="input-group-addon">+</div>\n        <input type="text" class="form-control" maxlength="3" placeholder="a[1]" style="width: 50px;">\n        <div class="input-group-addon">y</div>\n      </div>\n      <div class="input-group">\n        <div class="input-group-addon"><=</div>\n        <input type="text" class="form-control" maxlength="3" placeholder="b" style="width: 50px;">\n        <div class="input-group-addon">b</div>\n      </div>\n    </div>\n    <button type="button" class="btn btn-danger remove">\n      <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>\n    </button>\n  </div>\n</div>';
-    return $('#restrictions-add').on('click', function() {
+    $function = $('#function');
+    $formInputData = $('#form-input-data');
+    restrictionTemplate = $('#restriction-template').html();
+    addRestriction = function(a1, a2, b) {
       var $restriction;
       $restriction = $(restrictionTemplate);
+      if (a1 != null) {
+        $restriction.find('input[name="a1"]').val(parseInt(a1));
+      }
+      if (a2 != null) {
+        $restriction.find('input[name="a2"]').val(parseInt(a2));
+      }
+      if (b != null) {
+        $restriction.find('input[name="b"]').val(parseInt(b));
+      }
       $restriction.find('.remove').on('click', function() {
         return $restriction.remove();
       });
       return $restrictions.append($restriction);
+    };
+    setFunction = function(c1, c2) {
+      if (c1 != null) {
+        $function.find('input[name="c1"]').val(parseInt(c1));
+      }
+      if (c2 != null) {
+        return $function.find('input[name="c2"]').val(parseInt(c2));
+      }
+    };
+    $('#restrictions-add').on('click', addRestriction);
+    $('#input-data').on('submit', function(e) {
+      return e.preventDefault();
+    });
+    $('#calculate').on('click', function() {
+      var arrayData, input, value, _i, _len;
+      arrayData = $formInputData.serializeArray();
+      App.c = [];
+      App.a = [];
+      App.b = [];
+      for (_i = 0, _len = arrayData.length; _i < _len; _i++) {
+        input = arrayData[_i];
+        value = (input.value ? parseInt(input.value) : 0);
+        switch (input.name) {
+          case 'c1':
+            App.c[0] = value;
+            break;
+          case 'c2':
+            App.c[1] = value;
+            break;
+          case 'a1':
+            App.a.push([]);
+            App.a[App.a.length - 1][0] = value;
+            break;
+          case 'a2':
+            App.a[App.a.length - 1][1] = value;
+            break;
+          case 'b':
+            App.b.push(value);
+        }
+      }
+      return console.log(App);
+    });
+    return $('#load-file').on('click', function() {
+      var i, _, _i, _len, _ref, _results;
+      if (App.a && App.b && App.c) {
+        setFunction(App.c[0], App.c[1]);
+        $restrictions.empty();
+        _ref = App.a;
+        _results = [];
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          _ = _ref[i];
+          _results.push(addRestriction(App.a[i][0], App.a[i][1], App.b[i]));
+        }
+        return _results;
+      }
     });
   });
 
