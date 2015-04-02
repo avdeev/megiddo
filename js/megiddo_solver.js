@@ -58,7 +58,27 @@
     };
 
     MegiddoSolver.prototype.setU = function() {
-      return this.U = [];
+      var alpha, i, negatives, positives, _i, _len, _ref;
+      this.U = [];
+      positives = [];
+      negatives = [];
+      _ref = this.I['0'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        alpha = this.alpha[i][0];
+        if (alpha > 0) {
+          positives.push(alpha);
+        }
+        if (alpha < 0) {
+          negatives.push(alpha);
+        }
+      }
+      if (negatives) {
+        this.U[0] = Math.max(negatives);
+      }
+      if (positives) {
+        return this.U[1] = Math.min(positives);
+      }
     };
 
     return MegiddoSolver;

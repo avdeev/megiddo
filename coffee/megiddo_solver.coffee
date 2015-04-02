@@ -34,3 +34,15 @@ class App.MegiddoSolver
       
   setU: ->
     @U = []
+
+    positives = []
+    negatives = []
+    for i in @I['0']
+      alpha = @alpha[i][0]
+      positives.push alpha if alpha > 0
+      negatives.push alpha if alpha < 0
+
+    @U[0] = Math.max(negatives) if negatives
+    @U[1] = Math.min(positives) if positives
+
+    # Удалить ограничения из @a, @b
