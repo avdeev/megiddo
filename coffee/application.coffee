@@ -46,6 +46,7 @@ $ ->
 
     App.megiddoSolver = new App.MegiddoSolver App.a, App.b, App.c
     App.megiddoSolver.solve()
+    App.megiddoSolver.print $('#output')
 
   $('#load-file').on 'click', ->
     if App.a and App.b and App.c

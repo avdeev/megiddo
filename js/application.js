@@ -62,7 +62,8 @@
         }
       }
       App.megiddoSolver = new App.MegiddoSolver(App.a, App.b, App.c);
-      return App.megiddoSolver.solve();
+      App.megiddoSolver.solve();
+      return App.megiddoSolver.print($('#output'));
     });
     return $('#load-file').on('click', function() {
       var i, _, _i, _len, _ref, _results;
