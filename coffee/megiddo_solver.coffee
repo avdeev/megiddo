@@ -9,6 +9,7 @@ class App.MegiddoSolver
     @setU()
     @setDeltaGamma()
     @setMedians()
+    @findMax()
 
   setAlpha: ->
     @alpha = []
@@ -19,37 +20,30 @@ class App.MegiddoSolver
       @alpha[i][1] = @a[i][1] / @c[1]
 
   setI: ->
-    @I =
-      '-': []
-      '0': []
-      '+': []
-
-    for alpha, i in @alpha
-      if alpha[1] is 0
-        @I['0'].push i
-      else if alpha[1] > 0
-        @I['+'].push i
-      else if alpha[1] < 0
-        @I['-'].push i
+    @I = {}
+    @I['0'] = (i for alpha, i in @alpha when alpha[1] is 0)
+    @I['+'] = (i for alpha, i in @alpha when alpha[1] > 0)
+    @I['-'] = (i for alpha, i in @alpha when alpha[1] < 0)
       
   setU: ->
     @U = []
 
-    positives = []
-    negatives = []
-    for i in @I['0']
-      alpha = @alpha[i][0]
-      positives.push alpha if alpha > 0
-      negatives.push alpha if alpha < 0
+    return unless @I['0'].length
 
-    @U[0] = Math.max(negatives) if negatives.length
-    @U[1] = Math.min(positives) if positives.length
+    positives = (@alpha[i][0] for i in @I['0'] when @alpha[i][0] > 0)
+    negatives = (@alpha[i][0] for i in @I['0'] when @alpha[i][0] < 0)
+
+    @U[0] = Math.max(negatives...) if negatives.length
+    @U[1] = Math.min(positives...) if positives.length
 
     # Удалить ограничения из @a, @b
     @removeRestriction i for i in positives.concat negatives
 
   removeRestriction: (i) ->
     @removedRestrictions.push i
+
+  isRestrictionExist: (i) ->
+    @a[i]? and not (i in @removedRestrictions)
 
   setDeltaGamma: ->
     @delta = []
@@ -62,44 +56,42 @@ class App.MegiddoSolver
   setMedians: ->
     @medians = []
 
-    for _, i in @I['+'] by 2
-      if @I['+'][i + 1]?
-        first = @I['+'][i]
-        second = @I['+'][i + 1]
-        if @delta[first] is @delta[second]
-          if @gamma[first] > @gamma[second] then @removeRestriction i
+    for _, i in @I['+'] by 2 when @I['+'][i + 1]?
+      first = @I['+'][i]
+      second = @I['+'][i + 1]
+      if @delta[first] is @delta[second]
+        if @gamma[first] > @gamma[second] then @removeRestriction i
+        else @removeRestriction second
+      else
+        x = (@gamma[second] - @gamma[first]) / (@delta[first] - @delta[second])
+        if @U[0]? and x < @U[0]
+          if @delta[first] > @delta[second] then @removeRestriction i
+          else @removeRestriction second
+        else if @U[1]? and x > @U[1]
+          if @delta[first] < @delta[second] then @removeRestriction i
           else @removeRestriction second
         else
-          x = (@gamma[second] - @gamma[first]) / (@delta[first] - @delta[second])
-          if @U[0]? and x < @U[0]
-            if @delta[first] > @delta[second] then @removeRestriction i
-            else @removeRestriction second
-          else if @U[1]? and x > @U[1]
-            if @delta[first] < @delta[second] then @removeRestriction i
-            else @removeRestriction second
-          else
-            @medians.push x
+          @medians.push x
 
-    for _, i in @I['-'] by 2
-      if @I['-'][i + 1]?
-        first = @I['-'][i]
-        second = @I['-'][i + 1]
-        if @delta[first] is @delta[i + 1]
-          if @gamma[first] < @gamma[i + 1] then @removeRestriction i
-          else @removeRestriction i + 1
+    for _, i in @I['-'] by 2 when @I['-'][i + 1]?
+      first = @I['-'][i]
+      second = @I['-'][i + 1]
+      if @delta[first] is @delta[second]
+        if @gamma[first] < @gamma[second] then @removeRestriction i
+        else @removeRestriction second
+      else
+        x = (@gamma[second] - @gamma[first]) / (@delta[first] - @delta[second])
+        if @U[0]? and x < @U[0]
+          if @delta[first] < @delta[second] then @removeRestriction i
+          else @removeRestriction second
+        else if @U[1]? and x > @U[1]
+          if @delta[first] > @delta[second] then @removeRestriction i
+          else @removeRestriction second
         else
-          x = (@gamma[i + 1] - @gamma[first]) / (@delta[first] - @delta[i + 1])
-          if @U[0]? and x < @U[0]
-            if @delta[first] < @delta[i + 1] then @removeRestriction i
-            else @removeRestriction i + 1
-          else if @U[1]? and x > @U[1]
-            if @delta[first] > @delta[i + 1] then @removeRestriction i
-            else @removeRestriction i + 1
-          else
-            @medians.push x
+          @medians.push x
 
   sortArr: (arr) ->
-    newArr = arr.slice(0) # клонируем массив
+    newArr = arr[...] # клонируем массив
     newArr.sort (a, b) ->
       intA = parseInt a
       intB = parseInt b
@@ -112,11 +104,37 @@ class App.MegiddoSolver
       @sortArr(arr)[Math.floor((arr.length - 1) / 2)]
     else
       arrCopies = []
-      m = 0
-      while m < Math.floor(arr.length / 5)
+      for m in [0..(Math.floor(arr.length / 5) - 1)]
         arrCopies.push @sortArr(arr.slice(m * 5, (m + 1) * 5))[2]
-        m++
-      findMediana arrCopies 
+      findMediana arrCopies
+
+  findMax: ->
+    x = @findMediana @medians
+    if x?
+      @Y = {}
+      @f = 
+        '+': {}
+        '-': {}
+
+      @Y['+'] = (val: @delta[i] * x + @gamma[i], i: i for i in @I['+'] when @isRestrictionExist(i))
+
+      if @Y['+'].length
+        min = Math.min((i.val for i in @Y['+'])...)
+        minI = (i.i for i in @Y['+'] when i.val is min)
+
+        deltas = (@delta[i] for i in minI)
+        @f['+'].l = Math.max(deltas...)
+        @f['+'].r = Math.min(deltas...)
+
+      @Y['-'] = (val: @delta[i] * x + @gamma[i], i: i for i in @I['-'] when @isRestrictionExist(i))
+
+      if @Y['-'].length
+        max = Math.max((i.val for i in @Y['-'])...)
+        maxI = (i.i for i in @Y['-'] when i.val is max)
+
+        deltas = (@delta[i] for i in maxI)
+        @f['-'].l = Math.min(deltas...)
+        @f['-'].r = Math.max(deltas...)
 
   print: ($output) ->
     $output.empty()
@@ -129,5 +147,7 @@ class App.MegiddoSolver
     $output.append $('<pre>').text "delta = #{JSON.stringify(@delta, null, 2)}"
     $output.append $('<pre>').text "gamma = #{JSON.stringify(@gamma, null, 2)}"
     $output.append $('<pre>').text "medians = #{JSON.stringify(@medians, null, 2)}"
+    $output.append $('<pre>').text "Y = #{JSON.stringify(@Y, null, 2)}"
+    $output.append $('<pre>').text "f = #{JSON.stringify(@f, null, 2)}"
     $output.append $('<pre>').text "removedRestrictions = #{JSON.stringify(@removedRestrictions, null, 2)}"
 
