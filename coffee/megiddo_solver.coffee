@@ -36,14 +36,13 @@ class App.MegiddoSolver
     @U[0] = Math.max(negatives...) if negatives.length
     @U[1] = Math.min(positives...) if positives.length
 
-    # Удалить ограничения из @a, @b
-    @removeRestriction i for i in positives.concat negatives
+    @removeRestriction i for i in @I['0'] when @alpha[i][0] not in @U
 
   removeRestriction: (i) ->
-    @removedRestrictions.push i
+    @removedRestrictions.push i if @isRestrictionExist i
 
   isRestrictionExist: (i) ->
-    @a[i]? and not (i in @removedRestrictions)
+    not (i in @removedRestrictions)
 
   setDeltaGamma: ->
     @delta = []
@@ -56,85 +55,146 @@ class App.MegiddoSolver
   setMedians: ->
     @medians = []
 
-    for _, i in @I['+'] by 2 when @I['+'][i + 1]?
-      first = @I['+'][i]
-      second = @I['+'][i + 1]
-      if @delta[first] is @delta[second]
-        if @gamma[first] > @gamma[second] then @removeRestriction i
-        else @removeRestriction second
+    for _, index in @I['+'] by 2 when @I['+'][index + 1]?
+      i = @I['+'][index]
+      j = @I['+'][index + 1]
+      if @delta[i] is @delta[j]
+        @removeRestriction (if @gamma[i] > @gamma[j] then i else j)
       else
-        x = (@gamma[second] - @gamma[first]) / (@delta[first] - @delta[second])
+        x = (@gamma[j] - @gamma[i]) / (@delta[i] - @delta[j])
         if @U[0]? and x < @U[0]
-          if @delta[first] > @delta[second] then @removeRestriction i
-          else @removeRestriction second
+          @removeRestriction (if @delta[i] > @delta[j] then i else j)
         else if @U[1]? and x > @U[1]
-          if @delta[first] < @delta[second] then @removeRestriction i
-          else @removeRestriction second
+          @removeRestriction (if @delta[i] < @delta[j] then i else j)
         else
-          @medians.push x
+          @medians.push i: i, j: j, val: x, sign: '+'
 
-    for _, i in @I['-'] by 2 when @I['-'][i + 1]?
-      first = @I['-'][i]
-      second = @I['-'][i + 1]
-      if @delta[first] is @delta[second]
-        if @gamma[first] < @gamma[second] then @removeRestriction i
-        else @removeRestriction second
+    for _, index in @I['-'] by 2 when @I['-'][index + 1]?
+      i = @I['-'][index]
+      j = @I['-'][index + 1]
+      if @delta[i] is @delta[j]
+        @removeRestriction (if @gamma[i] < @gamma[j] then i else j)
       else
-        x = (@gamma[second] - @gamma[first]) / (@delta[first] - @delta[second])
+        x = (@gamma[j] - @gamma[i]) / (@delta[i] - @delta[j])
         if @U[0]? and x < @U[0]
-          if @delta[first] < @delta[second] then @removeRestriction i
-          else @removeRestriction second
+          @removeRestriction (if @delta[i] < @delta[j] then i else j)
         else if @U[1]? and x > @U[1]
-          if @delta[first] > @delta[second] then @removeRestriction i
-          else @removeRestriction second
+          @removeRestriction (if @delta[i] > @delta[j] then i else j)
         else
-          @medians.push x
+          @medians.push i: i, j: j, val: x, sign: '-'
+
+    console.log @medians.length
 
   sortArr: (arr) ->
     newArr = arr[...] # клонируем массив
     newArr.sort (a, b) ->
-      intA = parseInt a
-      intB = parseInt b
-      if intA < intB then -1
-      else if intA > intB then 1
+      if a.val < b.val then -1
+      else if a.val > b.val then 1
       else 0
 
   findMediana: (arr) ->
-    if arr.length < 74 # специальное число
+    if arr.length <= 10000 # специальное число
       @sortArr(arr)[Math.floor((arr.length - 1) / 2)]
     else
       arrCopies = []
       for m in [0..(Math.floor(arr.length / 5) - 1)]
         arrCopies.push @sortArr(arr.slice(m * 5, (m + 1) * 5))[2]
-      findMediana arrCopies
+      @findMediana arrCopies
+
+  FPlus: (x) ->
+    Y = (val: @delta[i] * x.val + @gamma[i], i: i for i in @I['+'] when @isRestrictionExist(i))
+
+    val = Math.min((el.val for el in Y)...)
+    valIndex = (el.i for el in Y when el.val is val)
+
+    deltas = (@delta[i] for i in valIndex)
+    l = Math.max(deltas...)
+    r = Math.min(deltas...)
+
+    {val, l, r}
+
+  FMinus: (x) ->
+    Y = (val: @delta[i] * x.val + @gamma[i], i: i for i in @I['-'] when @isRestrictionExist(i))
+
+    val = Math.max((el.val for el in Y)...)
+    valIndex = (el.i for el in Y when el.val is val)
+
+    deltas = (@delta[i] for i in valIndex)
+    l = Math.min(deltas...)
+    r = Math.max(deltas...)
+
+    {val, l, r}
+
+  removeMediansLeft: (x) ->
+    console.log '---- left ----'
+    medians = @medians[...]
+    for median, i in medians when median.val <= x.val
+      @medians.splice(i, 1)
+      console.log i
+      console.log median
+      # if median.val is x.val
+      #   switch median.sign
+      #     when '+'
+      #       @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
+      #     when '-'
+      #       @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
+      # else
+      #   console.log 'оба'
+      @removeRestriction median.i
+      @removeRestriction median.j
+
+  removeMediansRight: (x) ->
+    console.log '---- right ----'
+    medians = @medians[...]
+    for median, i in medians when median.val >= x.val
+      @medians.splice(i, 1)
+      console.log i
+      console.log median
+      # if median.val is x.val
+      #   switch median.sign
+      #     when '+'
+      #       @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
+      #     when '-'
+      #       @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
+      # else
+      #   console.log 'оба'
+      @removeRestriction median.i
+      @removeRestriction median.j
 
   findMax: ->
-    x = @findMediana @medians
-    if x?
-      @Y = {}
+    repeats = 500
+    while @medians.length and repeats-- > 0
+      x = @findMediana @medians
+
       @f = 
-        '+': {}
-        '-': {}
+        '+': @FPlus x
+        '-': @FMinus x 
 
-      @Y['+'] = (val: @delta[i] * x + @gamma[i], i: i for i in @I['+'] when @isRestrictionExist(i))
+      if @f['-'].val - @f['+'].val > 0
+        if @f['-'].r >= @f['+'].r and @f['-'].l <= @f['+'].l
+          # задача неразрешима
+          console.log 'задача неразрешима'
+          return false
+        else
+          if @f['-'].r < @f['+'].r
+            @removeMediansLeft x
+          else
+            @removeMediansRight x
+      else
+        if @f['+'].l > 0
+          if @f['+'].r > 0  and @f['+'].r <= @f['+'].l
+            @removeMediansLeft x
+          else
+            # нашли!
+            console.log x, 'Нашли!'
+            return false
+        else
+          if @f['+'].r < 0
+            @removeMediansRight x
 
-      if @Y['+'].length
-        min = Math.min((i.val for i in @Y['+'])...)
-        minI = (i.i for i in @Y['+'] when i.val is min)
-
-        deltas = (@delta[i] for i in minI)
-        @f['+'].l = Math.max(deltas...)
-        @f['+'].r = Math.min(deltas...)
-
-      @Y['-'] = (val: @delta[i] * x + @gamma[i], i: i for i in @I['-'] when @isRestrictionExist(i))
-
-      if @Y['-'].length
-        max = Math.max((i.val for i in @Y['-'])...)
-        maxI = (i.i for i in @Y['-'] when i.val is max)
-
-        deltas = (@delta[i] for i in maxI)
-        @f['-'].l = Math.min(deltas...)
-        @f['-'].r = Math.max(deltas...)
+    lastRestrictionPlus = (i for i in @I['+'] when @isRestrictionExist i)
+    lastRestrictionMinus = (i for i in @I['-'] when @isRestrictionExist i)
+    console.log(lastRestrictionPlus.length + lastRestrictionMinus.length)
 
   print: ($output) ->
     $output.empty()
@@ -147,7 +207,5 @@ class App.MegiddoSolver
     $output.append $('<pre>').text "delta = #{JSON.stringify(@delta, null, 2)}"
     $output.append $('<pre>').text "gamma = #{JSON.stringify(@gamma, null, 2)}"
     $output.append $('<pre>').text "medians = #{JSON.stringify(@medians, null, 2)}"
-    $output.append $('<pre>').text "Y = #{JSON.stringify(@Y, null, 2)}"
-    $output.append $('<pre>').text "f = #{JSON.stringify(@f, null, 2)}"
     $output.append $('<pre>').text "removedRestrictions = #{JSON.stringify(@removedRestrictions, null, 2)}"
 

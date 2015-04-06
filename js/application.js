@@ -1,6 +1,6 @@
 (function() {
   $(function() {
-    var $formInputData, $function, $restrictions, addRestriction, restrictionTemplate, setFunction;
+    var $formInputData, $function, $restrictions, addRestriction, i, randomNum, restrictionTemplate, setFunction, _i;
     $restrictions = $('#restrictions');
     $function = $('#function');
     $formInputData = $('#form-input-data');
@@ -30,42 +30,44 @@
         return $function.find('input[name="c2"]').val(parseInt(c2));
       }
     };
-    $('#restrictions-add').on('click', addRestriction);
+    $('#restrictions-add').on('click', function() {
+      return addRestriction();
+    });
     $('#input-data').on('submit', function(e) {
       return e.preventDefault();
     });
     $('#calculate').on('click', function() {
-      var arrayData, input, value, _i, _len;
+      var a, arrayData, b, c, input, value, _i, _len;
       arrayData = $formInputData.serializeArray();
-      App.c = [];
-      App.a = [];
-      App.b = [];
+      c = [];
+      a = [];
+      b = [];
       for (_i = 0, _len = arrayData.length; _i < _len; _i++) {
         input = arrayData[_i];
         value = (input.value ? parseInt(input.value) : 0);
         switch (input.name) {
           case 'c1':
-            App.c[0] = value;
+            c[0] = value;
             break;
           case 'c2':
-            App.c[1] = value;
+            c[1] = value;
             break;
           case 'a1':
-            App.a.push([]);
-            App.a[App.a.length - 1][0] = value;
+            a.push([]);
+            a[a.length - 1][0] = value;
             break;
           case 'a2':
-            App.a[App.a.length - 1][1] = value;
+            a[a.length - 1][1] = value;
             break;
           case 'b':
-            App.b.push(value);
+            b.push(value);
         }
       }
-      App.megiddoSolver = new App.MegiddoSolver(App.a, App.b, App.c);
+      App.megiddoSolver = new App.MegiddoSolver(a, b, c);
       App.megiddoSolver.solve();
       return App.megiddoSolver.print($('#output'));
     });
-    return $('#load-file').on('click', function() {
+    $('#load-file').on('click', function() {
       var i, _, _i, _len, _ref, _results;
       if (App.a && App.b && App.c) {
         setFunction(App.c[0], App.c[1]);
@@ -79,6 +81,20 @@
         return _results;
       }
     });
+    randomNum = function(max, min) {
+      if (min == null) {
+        min = 0;
+      }
+      return Math.floor(Math.random() * (max - min) + min);
+    };
+    App.a = [];
+    App.b = [];
+    for (i = _i = 0; _i <= 99; i = ++_i) {
+      App.a.push([randomNum(100, -100), randomNum(100, -100)]);
+      App.b.push(randomNum(100, -100));
+    }
+    $('#load-file').click();
+    return $('#calculate').click();
   });
 
 }).call(this);

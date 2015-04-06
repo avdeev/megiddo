@@ -8,11 +8,11 @@
 
 #function input[type='text'],
 #restrictions input[type='text'] {
-  width: 45px;
+  width: 60px;
 }
 
 #restrictions {
-  counter-reset: list;
+  counter-reset: list -1;
 }
 #restrictions .number:before {
   counter-increment: list;

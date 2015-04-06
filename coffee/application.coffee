@@ -20,31 +20,31 @@ $ ->
     $function.find('input[name="c1"]').val(parseInt(c1)) if c1?
     $function.find('input[name="c2"]').val(parseInt(c2)) if c2?
 
-  $('#restrictions-add').on 'click', addRestriction
+  $('#restrictions-add').on 'click', -> addRestriction()
 
   $('#input-data').on 'submit', (e) -> e.preventDefault()
 
   $('#calculate').on 'click', ->
     arrayData = $formInputData.serializeArray()
-    App.c = []
-    App.a = []
-    App.b = []
+    c = []
+    a = []
+    b = []
     for input in arrayData
       value = (if input.value then parseInt(input.value) else 0)
       switch input.name
         when 'c1'
-          App.c[0] = value
+          c[0] = value
         when 'c2'
-          App.c[1] = value
+          c[1] = value
         when 'a1'
-          App.a.push []
-          App.a[App.a.length - 1][0] = value
+          a.push []
+          a[a.length - 1][0] = value
         when 'a2'
-          App.a[App.a.length - 1][1] = value
+          a[a.length - 1][1] = value
         when 'b'
-          App.b.push value
+          b.push value
 
-    App.megiddoSolver = new App.MegiddoSolver App.a, App.b, App.c
+    App.megiddoSolver = new App.MegiddoSolver a, b, c
     App.megiddoSolver.solve()
     App.megiddoSolver.print $('#output')
 
@@ -54,3 +54,16 @@ $ ->
 
       $restrictions.empty()
       addRestriction(App.a[i][0], App.a[i][1], App.b[i]) for _, i in App.a
+
+
+  randomNum = (max, min=0) ->
+    Math.floor(Math.random() * (max - min) + min)
+
+  App.a = []
+  App.b = []
+  for i in [0..99]
+    App.a.push [randomNum(100, -100), randomNum(100, -100)]
+    App.b.push randomNum(100, -100)
+
+  $('#load-file').click()
+  $('#calculate').click()

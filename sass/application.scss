@@ -11,12 +11,12 @@
 #function,
 #restrictions {
   input[type='text'] {
-    width: 45px;
+    width: 60px;
   }
 }
 
 #restrictions {
-  counter-reset: list;
+  counter-reset: list -1;
   .number {
     &:before {
       counter-increment: list;
