@@ -1,6 +1,6 @@
 (function() {
   $(function() {
-    var $formInputData, $function, $restrictions, addRestriction, i, randomNum, restrictionTemplate, setFunction, _i;
+    var $formInputData, $function, $restrictions, addRestriction, randomNum, restrictionTemplate, setFunction;
     $restrictions = $('#restrictions');
     $function = $('#function');
     $formInputData = $('#form-input-data');
@@ -81,20 +81,12 @@
         return _results;
       }
     });
-    randomNum = function(max, min) {
+    return randomNum = function(max, min) {
       if (min == null) {
         min = 0;
       }
       return Math.floor(Math.random() * (max - min) + min);
     };
-    App.a = [];
-    App.b = [];
-    for (i = _i = 0; _i <= 99; i = ++_i) {
-      App.a.push([randomNum(100, -100), randomNum(100, -100)]);
-      App.b.push(randomNum(100, -100));
-    }
-    $('#load-file').click();
-    return $('#calculate').click();
   });
 
 }).call(this);

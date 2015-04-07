@@ -16,8 +16,17 @@
       this.setI();
       this.setU();
       this.setDeltaGamma();
-      this.setMedians();
-      return this.findMax();
+      while (true) {
+        this.setMedians();
+        if (this.findMax() === false) {
+          break;
+        }
+        this.setI();
+        if (this.restrictionCount() <= 4) {
+          break;
+        }
+      }
+      return console.log(this.restrictionCount());
     };
 
     MegiddoSolver.prototype.setAlpha = function() {
@@ -43,7 +52,7 @@
         _results = [];
         for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
           alpha = _ref[i];
-          if (alpha[1] === 0) {
+          if (alpha[1] === 0 && this.isRestrictionExist(i)) {
             _results.push(i);
           }
         }
@@ -55,7 +64,7 @@
         _results = [];
         for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
           alpha = _ref[i];
-          if (alpha[1] > 0) {
+          if (alpha[1] > 0 && this.isRestrictionExist(i)) {
             _results.push(i);
           }
         }
@@ -67,7 +76,7 @@
         _results = [];
         for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
           alpha = _ref[i];
-          if (alpha[1] < 0) {
+          if (alpha[1] < 0 && this.isRestrictionExist(i)) {
             _results.push(i);
           }
         }
@@ -132,6 +141,22 @@
       return !(__indexOf.call(this.removedRestrictions, i) >= 0);
     };
 
+    MegiddoSolver.prototype.restrictionCount = function() {
+      var i;
+      return ((function() {
+        var _i, _len, _ref, _results;
+        _ref = this.I['0'].concat(this.I['+']).concat(this.I['-']);
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          i = _ref[_i];
+          if (this.isRestrictionExist(i)) {
+            _results.push(i);
+          }
+        }
+        return _results;
+      }).call(this)).length;
+    };
+
     MegiddoSolver.prototype.setDeltaGamma = function() {
       var i, _i, _len, _ref, _results;
       this.delta = [];
@@ -147,7 +172,7 @@
     };
 
     MegiddoSolver.prototype.setMedians = function() {
-      var i, index, j, x, _, _i, _j, _len, _len1, _ref, _ref1;
+      var i, index, j, x, _, _i, _j, _len, _len1, _ref, _ref1, _results;
       this.medians = [];
       _ref = this.I['+'];
       for (index = _i = 0, _len = _ref.length; _i < _len; index = _i += 2) {
@@ -176,6 +201,7 @@
         }
       }
       _ref1 = this.I['-'];
+      _results = [];
       for (index = _j = 0, _len1 = _ref1.length; _j < _len1; index = _j += 2) {
         _ = _ref1[index];
         if (!(this.I['-'][index + 1] != null)) {
@@ -184,30 +210,28 @@
         i = this.I['-'][index];
         j = this.I['-'][index + 1];
         if (this.delta[i] === this.delta[j]) {
-          this.removeRestriction((this.gamma[i] < this.gamma[j] ? i : j));
+          _results.push(this.removeRestriction((this.gamma[i] < this.gamma[j] ? i : j)));
         } else {
           x = (this.gamma[j] - this.gamma[i]) / (this.delta[i] - this.delta[j]);
           if ((this.U[0] != null) && x < this.U[0]) {
-            this.removeRestriction((this.delta[i] < this.delta[j] ? i : j));
+            _results.push(this.removeRestriction((this.delta[i] < this.delta[j] ? i : j)));
           } else if ((this.U[1] != null) && x > this.U[1]) {
-            this.removeRestriction((this.delta[i] > this.delta[j] ? i : j));
+            _results.push(this.removeRestriction((this.delta[i] > this.delta[j] ? i : j)));
           } else {
-            this.medians.push({
+            _results.push(this.medians.push({
               i: i,
               j: j,
               val: x,
               sign: '-'
-            });
+            }));
           }
         }
       }
-      return console.log(this.medians.length);
+      return _results;
     };
 
-    MegiddoSolver.prototype.sortArr = function(arr) {
-      var newArr;
-      newArr = arr.slice(0);
-      return newArr.sort(function(a, b) {
+    MegiddoSolver.prototype.findMediana = function(arr) {
+      this.medians.sort(function(a, b) {
         if (a.val < b.val) {
           return -1;
         } else if (a.val > b.val) {
@@ -216,19 +240,7 @@
           return 0;
         }
       });
-    };
-
-    MegiddoSolver.prototype.findMediana = function(arr) {
-      var arrCopies, m, _i, _ref;
-      if (arr.length <= 10000) {
-        return this.sortArr(arr)[Math.floor((arr.length - 1) / 2)];
-      } else {
-        arrCopies = [];
-        for (m = _i = 0, _ref = Math.floor(arr.length / 5) - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; m = 0 <= _ref ? ++_i : --_i) {
-          arrCopies.push(this.sortArr(arr.slice(m * 5, (m + 1) * 5))[2]);
-        }
-        return this.findMediana(arrCopies);
-      }
+      return this.medians[Math.floor((arr.length - 1) / 2)];
     };
 
     MegiddoSolver.prototype.FPlus = function(x) {
@@ -342,47 +354,70 @@
     };
 
     MegiddoSolver.prototype.removeMediansLeft = function(x) {
-      var i, median, medians, _i, _len, _results;
-      console.log('---- left ----');
-      medians = this.medians.slice(0);
-      _results = [];
-      for (i = _i = 0, _len = medians.length; _i < _len; i = ++_i) {
-        median = medians[i];
+      var median, _i, _len, _ref;
+      _ref = this.medians;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        median = _ref[_i];
         if (!(median.val <= x.val)) {
           continue;
         }
-        this.medians.splice(i, 1);
-        console.log(i);
-        console.log(median);
-        this.removeRestriction(median.i);
-        _results.push(this.removeRestriction(median.j));
+        median.removed = true;
+        switch (median.sign) {
+          case '+':
+            this.removeRestriction((this.delta[median.i] > this.delta[median.j] ? median.i : median.j));
+            break;
+          case '-':
+            this.removeRestriction((this.delta[median.i] < this.delta[median.j] ? median.i : median.j));
+        }
       }
-      return _results;
+      return this.medians = (function() {
+        var _j, _len1, _ref1, _results;
+        _ref1 = this.medians;
+        _results = [];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          median = _ref1[_j];
+          if (!median.removed) {
+            _results.push(median);
+          }
+        }
+        return _results;
+      }).call(this);
     };
 
     MegiddoSolver.prototype.removeMediansRight = function(x) {
-      var i, median, medians, _i, _len, _results;
-      console.log('---- right ----');
-      medians = this.medians.slice(0);
-      _results = [];
-      for (i = _i = 0, _len = medians.length; _i < _len; i = ++_i) {
-        median = medians[i];
+      var median, _i, _len, _ref;
+      _ref = this.medians;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        median = _ref[_i];
         if (!(median.val >= x.val)) {
           continue;
         }
-        this.medians.splice(i, 1);
-        console.log(i);
-        console.log(median);
-        this.removeRestriction(median.i);
-        _results.push(this.removeRestriction(median.j));
+        median.removed = true;
+        switch (median.sign) {
+          case '+':
+            this.removeRestriction((this.delta[median.i] < this.delta[median.j] ? median.i : median.j));
+            break;
+          case '-':
+            this.removeRestriction((this.delta[median.i] > this.delta[median.j] ? median.i : median.j));
+        }
       }
-      return _results;
+      return this.medians = (function() {
+        var _j, _len1, _ref1, _results;
+        _ref1 = this.medians;
+        _results = [];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          median = _ref1[_j];
+          if (!median.removed) {
+            _results.push(median);
+          }
+        }
+        return _results;
+      }).call(this);
     };
 
     MegiddoSolver.prototype.findMax = function() {
-      var i, lastRestrictionMinus, lastRestrictionPlus, repeats, x;
-      repeats = 500;
-      while (this.medians.length && repeats-- > 0) {
+      var x;
+      while (this.medians.length) {
         x = this.findMediana(this.medians);
         this.f = {
           '+': this.FPlus(x),
@@ -414,45 +449,12 @@
           }
         }
       }
-      lastRestrictionPlus = (function() {
-        var _i, _len, _ref, _results;
-        _ref = this.I['+'];
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          i = _ref[_i];
-          if (this.isRestrictionExist(i)) {
-            _results.push(i);
-          }
-        }
-        return _results;
-      }).call(this);
-      lastRestrictionMinus = (function() {
-        var _i, _len, _ref, _results;
-        _ref = this.I['-'];
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          i = _ref[_i];
-          if (this.isRestrictionExist(i)) {
-            _results.push(i);
-          }
-        }
-        return _results;
-      }).call(this);
-      return console.log(lastRestrictionPlus.length + lastRestrictionMinus.length);
     };
 
     MegiddoSolver.prototype.print = function($output) {
       $output.empty();
-      $output.append($('<pre>').text("a = " + (JSON.stringify(this.a, null, 2))));
-      $output.append($('<pre>').text("b = " + (JSON.stringify(this.b, null, 2))));
-      $output.append($('<pre>').text("c = " + (JSON.stringify(this.c, null, 2))));
-      $output.append($('<pre>').text("alpha = " + (JSON.stringify(this.alpha, null, 2))));
       $output.append($('<pre>').text("I = " + (JSON.stringify(this.I, null, 2))));
-      $output.append($('<pre>').text("U = " + (JSON.stringify(this.U, null, 2))));
-      $output.append($('<pre>').text("delta = " + (JSON.stringify(this.delta, null, 2))));
-      $output.append($('<pre>').text("gamma = " + (JSON.stringify(this.gamma, null, 2))));
-      $output.append($('<pre>').text("medians = " + (JSON.stringify(this.medians, null, 2))));
-      return $output.append($('<pre>').text("removedRestrictions = " + (JSON.stringify(this.removedRestrictions, null, 2))));
+      return $output.append($('<pre>').text("U = " + (JSON.stringify(this.U))));
     };
 
     return MegiddoSolver;

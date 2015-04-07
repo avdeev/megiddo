@@ -59,11 +59,11 @@ $ ->
   randomNum = (max, min=0) ->
     Math.floor(Math.random() * (max - min) + min)
 
-  App.a = []
-  App.b = []
-  for i in [0..99]
-    App.a.push [randomNum(100, -100), randomNum(100, -100)]
-    App.b.push randomNum(100, -100)
+  # App.a = []
+  # App.b = []
+  # for i in [0..999]
+  #   App.a.push [randomNum(100, -100), randomNum(100, -100)]
+  #   App.b.push randomNum(100, -100)
 
-  $('#load-file').click()
-  $('#calculate').click()
+  # $('#load-file').click()
+  # $('#calculate').click()

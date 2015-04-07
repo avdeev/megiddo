@@ -1,15 +1,23 @@
 window.App ||= {}
 class App.MegiddoSolver
+
   constructor: (@a, @b, @c) ->
     @removedRestrictions = []
 
   solve: ->
     @setAlpha()
+
     @setI()
     @setU()
     @setDeltaGamma()
-    @setMedians()
-    @findMax()
+
+    loop
+      @setMedians()
+      break if @findMax() is false
+      @setI()
+      break if @restrictionCount() <= 4
+
+    console.log @restrictionCount()
 
   setAlpha: ->
     @alpha = []
@@ -21,9 +29,9 @@ class App.MegiddoSolver
 
   setI: ->
     @I = {}
-    @I['0'] = (i for alpha, i in @alpha when alpha[1] is 0)
-    @I['+'] = (i for alpha, i in @alpha when alpha[1] > 0)
-    @I['-'] = (i for alpha, i in @alpha when alpha[1] < 0)
+    @I['0'] = (i for alpha, i in @alpha when alpha[1] is 0 and @isRestrictionExist(i))
+    @I['+'] = (i for alpha, i in @alpha when alpha[1] > 0 and @isRestrictionExist(i))
+    @I['-'] = (i for alpha, i in @alpha when alpha[1] < 0 and @isRestrictionExist(i))
       
   setU: ->
     @U = []
@@ -43,6 +51,9 @@ class App.MegiddoSolver
 
   isRestrictionExist: (i) ->
     not (i in @removedRestrictions)
+
+  restrictionCount: ->
+    (i for i in @I['0'].concat(@I['+']).concat(@I['-']) when @isRestrictionExist(i)).length
 
   setDeltaGamma: ->
     @delta = []
@@ -83,23 +94,13 @@ class App.MegiddoSolver
         else
           @medians.push i: i, j: j, val: x, sign: '-'
 
-    console.log @medians.length
-
-  sortArr: (arr) ->
-    newArr = arr[...] # клонируем массив
-    newArr.sort (a, b) ->
+  findMediana: (arr) ->
+    @medians.sort (a, b) ->
       if a.val < b.val then -1
       else if a.val > b.val then 1
       else 0
 
-  findMediana: (arr) ->
-    if arr.length <= 10000 # специальное число
-      @sortArr(arr)[Math.floor((arr.length - 1) / 2)]
-    else
-      arrCopies = []
-      for m in [0..(Math.floor(arr.length / 5) - 1)]
-        arrCopies.push @sortArr(arr.slice(m * 5, (m + 1) * 5))[2]
-      @findMediana arrCopies
+    @medians[Math.floor((arr.length - 1) / 2)]
 
   FPlus: (x) ->
     Y = (val: @delta[i] * x.val + @gamma[i], i: i for i in @I['+'] when @isRestrictionExist(i))
@@ -126,44 +127,27 @@ class App.MegiddoSolver
     {val, l, r}
 
   removeMediansLeft: (x) ->
-    console.log '---- left ----'
-    medians = @medians[...]
-    for median, i in medians when median.val <= x.val
-      @medians.splice(i, 1)
-      console.log i
-      console.log median
-      # if median.val is x.val
-      #   switch median.sign
-      #     when '+'
-      #       @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
-      #     when '-'
-      #       @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
-      # else
-      #   console.log 'оба'
-      @removeRestriction median.i
-      @removeRestriction median.j
+    for median in @medians when median.val <= x.val
+      median.removed = true
+      switch median.sign
+        when '+'
+          @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
+        when '-'
+          @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
+    @medians = (median for median in @medians when not median.removed)
 
   removeMediansRight: (x) ->
-    console.log '---- right ----'
-    medians = @medians[...]
-    for median, i in medians when median.val >= x.val
-      @medians.splice(i, 1)
-      console.log i
-      console.log median
-      # if median.val is x.val
-      #   switch median.sign
-      #     when '+'
-      #       @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
-      #     when '-'
-      #       @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
-      # else
-      #   console.log 'оба'
-      @removeRestriction median.i
-      @removeRestriction median.j
+    for median in @medians when median.val >= x.val
+      median.removed = true
+      switch median.sign
+        when '+'
+          @removeRestriction (if @delta[median.i] < @delta[median.j] then median.i else median.j)
+        when '-'
+          @removeRestriction (if @delta[median.i] > @delta[median.j] then median.i else median.j)
+    @medians = (median for median in @medians when not median.removed)
 
   findMax: ->
-    repeats = 500
-    while @medians.length and repeats-- > 0
+    while @medians.length
       x = @findMediana @medians
 
       @f = 
@@ -192,20 +176,7 @@ class App.MegiddoSolver
           if @f['+'].r < 0
             @removeMediansRight x
 
-    lastRestrictionPlus = (i for i in @I['+'] when @isRestrictionExist i)
-    lastRestrictionMinus = (i for i in @I['-'] when @isRestrictionExist i)
-    console.log(lastRestrictionPlus.length + lastRestrictionMinus.length)
-
   print: ($output) ->
     $output.empty()
-    $output.append $('<pre>').text "a = #{JSON.stringify(@a, null, 2)}"
-    $output.append $('<pre>').text "b = #{JSON.stringify(@b, null, 2)}"
-    $output.append $('<pre>').text "c = #{JSON.stringify(@c, null, 2)}"
-    $output.append $('<pre>').text "alpha = #{JSON.stringify(@alpha, null, 2)}"
     $output.append $('<pre>').text "I = #{JSON.stringify(@I, null, 2)}"
-    $output.append $('<pre>').text "U = #{JSON.stringify(@U, null, 2)}"
-    $output.append $('<pre>').text "delta = #{JSON.stringify(@delta, null, 2)}"
-    $output.append $('<pre>').text "gamma = #{JSON.stringify(@gamma, null, 2)}"
-    $output.append $('<pre>').text "medians = #{JSON.stringify(@medians, null, 2)}"
-    $output.append $('<pre>').text "removedRestrictions = #{JSON.stringify(@removedRestrictions, null, 2)}"
-
+    $output.append $('<pre>').text "U = #{JSON.stringify(@U)}"
