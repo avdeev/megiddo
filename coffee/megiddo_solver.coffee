@@ -12,12 +12,12 @@ class App.MegiddoSolver
     @setDeltaGamma()
 
     loop
+      console.log @activeRestriction()
       @setMedians()
       break if @findMax() is false
       @setI()
       break if @restrictionCount() <= 4
-
-    console.log @restrictionCount()
+    console.log @activeRestriction()
 
   setAlpha: ->
     @alpha = []
@@ -47,13 +47,18 @@ class App.MegiddoSolver
     @removeRestriction i for i in @I['0'] when @alpha[i][0] not in @U
 
   removeRestriction: (i) ->
-    @removedRestrictions.push i if @isRestrictionExist i
+    if @isRestrictionExist i
+      @removedRestrictions.push i 
+      console.log "#{i} removed"
 
   isRestrictionExist: (i) ->
     not (i in @removedRestrictions)
 
+  activeRestriction: ->
+    (i for i in @I['+'].concat(@I['-']) when @isRestrictionExist(i))
+
   restrictionCount: ->
-    (i for i in @I['0'].concat(@I['+']).concat(@I['-']) when @isRestrictionExist(i)).length
+    @activeRestriction().length
 
   setDeltaGamma: ->
     @delta = []

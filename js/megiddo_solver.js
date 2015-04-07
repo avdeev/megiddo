@@ -17,6 +17,7 @@
       this.setU();
       this.setDeltaGamma();
       while (true) {
+        console.log(this.activeRestriction());
         this.setMedians();
         if (this.findMax() === false) {
           break;
@@ -26,7 +27,7 @@
           break;
         }
       }
-      return console.log(this.restrictionCount());
+      return console.log(this.activeRestriction());
     };
 
     MegiddoSolver.prototype.setAlpha = function() {
@@ -133,7 +134,8 @@
 
     MegiddoSolver.prototype.removeRestriction = function(i) {
       if (this.isRestrictionExist(i)) {
-        return this.removedRestrictions.push(i);
+        this.removedRestrictions.push(i);
+        return console.log("" + i + " removed");
       }
     };
 
@@ -141,20 +143,21 @@
       return !(__indexOf.call(this.removedRestrictions, i) >= 0);
     };
 
-    MegiddoSolver.prototype.restrictionCount = function() {
-      var i;
-      return ((function() {
-        var _i, _len, _ref, _results;
-        _ref = this.I['0'].concat(this.I['+']).concat(this.I['-']);
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          i = _ref[_i];
-          if (this.isRestrictionExist(i)) {
-            _results.push(i);
-          }
+    MegiddoSolver.prototype.activeRestriction = function() {
+      var i, _i, _len, _ref, _results;
+      _ref = this.I['+'].concat(this.I['-']);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        if (this.isRestrictionExist(i)) {
+          _results.push(i);
         }
-        return _results;
-      }).call(this)).length;
+      }
+      return _results;
+    };
+
+    MegiddoSolver.prototype.restrictionCount = function() {
+      return this.activeRestriction().length;
     };
 
     MegiddoSolver.prototype.setDeltaGamma = function() {
