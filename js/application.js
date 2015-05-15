@@ -37,7 +37,7 @@
       return e.preventDefault();
     });
     $('#calculate').on('click', function() {
-      var a, arrayData, b, c, input, value, _i, _len;
+      var $output, a, arrayData, b, c, input, value, _i, _len;
       arrayData = $formInputData.serializeArray();
       c = [];
       a = [];
@@ -65,7 +65,12 @@
       }
       App.megiddoSolver = new App.MegiddoSolver(a, b, c);
       App.megiddoSolver.solve();
-      return App.megiddoSolver.print($('#output'));
+      $output = $('#output');
+      $output.empty();
+      $output.append($('<pre>').text("I = " + (JSON.stringify(App.megiddoSolver.I, null, 2))));
+      $output.append($('<pre>').text("U = " + (JSON.stringify(App.megiddoSolver.U))));
+      $output.append($('<pre>').text("result = " + App.megiddoSolver.result));
+      return $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
     });
     $('#load-file').on('click', function() {
       var i, _, _i, _len, _ref, _results;

@@ -1,5 +1,7 @@
 window.App ||= {}
 class App.MegiddoSolver
+  result: null
+  point: {}
 
   constructor: (@a, @b, @c) ->
     @removedRestrictions = []
@@ -12,12 +14,13 @@ class App.MegiddoSolver
     @setDeltaGamma()
 
     loop
-      console.log @activeRestriction()
       @setMedians()
       break if @findMax() is false
       @setI()
       break if @restrictionCount() <= 4
-    console.log @activeRestriction()
+
+    if @restrictionCount() > 0
+      @solveBySimplex()
 
   setAlpha: ->
     @alpha = []
@@ -47,9 +50,7 @@ class App.MegiddoSolver
     @removeRestriction i for i in @I['0'] when @alpha[i][0] not in @U
 
   removeRestriction: (i) ->
-    if @isRestrictionExist i
-      @removedRestrictions.push i 
-      console.log "#{i} removed"
+    @removedRestrictions.push i if @isRestrictionExist i
 
   isRestrictionExist: (i) ->
     not (i in @removedRestrictions)
@@ -162,7 +163,6 @@ class App.MegiddoSolver
       if @f['-'].val - @f['+'].val > 0
         if @f['-'].r >= @f['+'].r and @f['-'].l <= @f['+'].l
           # задача неразрешима
-          console.log 'задача неразрешима'
           return false
         else
           if @f['-'].r < @f['+'].r
@@ -175,13 +175,27 @@ class App.MegiddoSolver
             @removeMediansLeft x
           else
             # нашли!
-            console.log x, 'Нашли!'
+            @result = x
             return false
         else
           if @f['+'].r < 0
             @removeMediansRight x
 
-  print: ($output) ->
-    $output.empty()
-    $output.append $('<pre>').text "I = #{JSON.stringify(@I, null, 2)}"
-    $output.append $('<pre>').text "U = #{JSON.stringify(@U)}"
+  solveBySimplex: ->
+    solver = new c.SimplexSolver() 
+
+    x = new c.Variable name: 'x'
+    y = new c.Variable name: 'y'
+    z = new c.Variable name: 'z'
+
+    solver.addConstraint new c.Equation z, new c.Expression(x, -1 * @c[0]).plus(new c.Expression(y, -1 * @c[1]))
+
+    for _, i in @a when @isRestrictionExist(i)
+      solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])
+
+    solver.optimize(z)
+    solver.resolve()
+
+    @result = (@c[0] * x.value + @c[1] * y.value).toFixed(3)
+    @point.x = x.value.toFixed(3)
+    @point.y = y.value.toFixed(3)

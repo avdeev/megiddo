@@ -46,7 +46,13 @@ $ ->
 
     App.megiddoSolver = new App.MegiddoSolver a, b, c
     App.megiddoSolver.solve()
-    App.megiddoSolver.print $('#output')
+
+    $output = $('#output')
+    $output.empty()
+    $output.append $('<pre>').text "I = #{JSON.stringify(App.megiddoSolver.I, null, 2)}"
+    $output.append $('<pre>').text "U = #{JSON.stringify(App.megiddoSolver.U)}"
+    $output.append $('<pre>').text "result = #{App.megiddoSolver.result}"
+    $output.append $('<pre>').text "point = [#{App.megiddoSolver.point.x}, #{App.megiddoSolver.point.y}]"
 
   $('#load-file').on 'click', ->
     if App.a and App.b and App.c

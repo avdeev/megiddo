@@ -4,6 +4,10 @@
   window.App || (window.App = {});
 
   App.MegiddoSolver = (function() {
+    MegiddoSolver.prototype.result = null;
+
+    MegiddoSolver.prototype.point = {};
+
     function MegiddoSolver(a, b, c) {
       this.a = a;
       this.b = b;
@@ -17,7 +21,6 @@
       this.setU();
       this.setDeltaGamma();
       while (true) {
-        console.log(this.activeRestriction());
         this.setMedians();
         if (this.findMax() === false) {
           break;
@@ -27,7 +30,9 @@
           break;
         }
       }
-      return console.log(this.activeRestriction());
+      if (this.restrictionCount() > 0) {
+        return this.solveBySimplex();
+      }
     };
 
     MegiddoSolver.prototype.setAlpha = function() {
@@ -134,8 +139,7 @@
 
     MegiddoSolver.prototype.removeRestriction = function(i) {
       if (this.isRestrictionExist(i)) {
-        this.removedRestrictions.push(i);
-        return console.log("" + i + " removed");
+        return this.removedRestrictions.push(i);
       }
     };
 
@@ -428,7 +432,6 @@
         };
         if (this.f['-'].val - this.f['+'].val > 0) {
           if (this.f['-'].r >= this.f['+'].r && this.f['-'].l <= this.f['+'].l) {
-            console.log('задача неразрешима');
             return false;
           } else {
             if (this.f['-'].r < this.f['+'].r) {
@@ -442,7 +445,7 @@
             if (this.f['+'].r > 0 && this.f['+'].r <= this.f['+'].l) {
               this.removeMediansLeft(x);
             } else {
-              console.log(x, 'Нашли!');
+              this.result = x;
               return false;
             }
           } else {
@@ -454,10 +457,31 @@
       }
     };
 
-    MegiddoSolver.prototype.print = function($output) {
-      $output.empty();
-      $output.append($('<pre>').text("I = " + (JSON.stringify(this.I, null, 2))));
-      return $output.append($('<pre>').text("U = " + (JSON.stringify(this.U))));
+    MegiddoSolver.prototype.solveBySimplex = function() {
+      var i, solver, x, y, z, _, _i, _len, _ref;
+      solver = new c.SimplexSolver();
+      x = new c.Variable({
+        name: 'x'
+      });
+      y = new c.Variable({
+        name: 'y'
+      });
+      z = new c.Variable({
+        name: 'z'
+      });
+      solver.addConstraint(new c.Equation(z, new c.Expression(x, -1 * this.c[0]).plus(new c.Expression(y, -1 * this.c[1]))));
+      _ref = this.a;
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        _ = _ref[i];
+        if (this.isRestrictionExist(i)) {
+          solver.addConstraint(new c.Inequality(new c.Expression(x, this.a[i][0]).plus(new c.Expression(y, this.a[i][1])), c.LEQ, this.b[i]));
+        }
+      }
+      solver.optimize(z);
+      solver.resolve();
+      this.result = (this.c[0] * x.value + this.c[1] * y.value).toFixed(3);
+      this.point.x = x.value.toFixed(3);
+      return this.point.y = y.value.toFixed(3);
     };
 
     return MegiddoSolver;
