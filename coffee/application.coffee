@@ -20,6 +20,15 @@ $ ->
     $function.find('input[name="c1"]').val(parseInt(c1)) if c1?
     $function.find('input[name="c2"]').val(parseInt(c2)) if c2?
 
+  printInputData = ->
+    setFunction App.c[0], App.c[1]
+
+    $restrictions.empty()
+    addRestriction(App.a[i][0], App.a[i][1], App.b[i]) for _, i in App.a
+
+  randomNum = (max, min=0) ->
+    Math.floor(Math.random() * (max - min) + min)
+
   $('#restrictions-add').on 'click', -> addRestriction()
 
   $('#input-data').on 'submit', (e) -> e.preventDefault()
@@ -45,31 +54,44 @@ $ ->
           b.push value
 
     App.megiddoSolver = new App.MegiddoSolver a, b, c
+
+    start = Date.now()
     App.megiddoSolver.solve()
+    stop = Date.now()
 
     $output = $('#output')
     $output.empty()
+    $output.append $('<h2>Мегиддо</h2>')
     $output.append $('<pre>').text "I = #{JSON.stringify(App.megiddoSolver.I, null, 2)}"
-    $output.append $('<pre>').text "U = #{JSON.stringify(App.megiddoSolver.U)}"
-    $output.append $('<pre>').text "result = #{App.megiddoSolver.result}"
+    $output.append $('<pre>').text "result = #{if App.megiddoSolver.result? then App.megiddoSolver.result else 'задача неразрешима'}"
     $output.append $('<pre>').text "point = [#{App.megiddoSolver.point.x}, #{App.megiddoSolver.point.y}]"
+    $output.append $('<pre>').text "Время выполнения: #{stop - start} ms"
+
+    App.megiddoSolver = new App.MegiddoSolver a, b, c
+
+    start = Date.now()
+    App.megiddoSolver.solveBySimplex()
+    stop = Date.now()
+
+    $output.append $('<h2>Симплекс</h2>')
+    $output.append $('<pre>').text "result = #{if App.megiddoSolver.result? then App.megiddoSolver.result else 'задача неразрешима'}"
+    $output.append $('<pre>').text "point = [#{App.megiddoSolver.point.x}, #{App.megiddoSolver.point.y}]"
+    $output.append $('<pre>').text "Время выполнения: #{stop - start} ms"
 
   $('#load-file').on 'click', ->
-    if App.a and App.b and App.c
-      setFunction App.c[0], App.c[1]
+    loadFromFile()
+    printInputData()
 
-      $restrictions.empty()
-      addRestriction(App.a[i][0], App.a[i][1], App.b[i]) for _, i in App.a
+  $('#random-calc').on 'click', ->
+    loadFromFile()
 
+    restrictionCount = 100
 
-  randomNum = (max, min=0) ->
-    Math.floor(Math.random() * (max - min) + min)
+    App.a = []
+    App.b = []
+    for i in [0..(restrictionCount - 1)]
+      App.a.push [randomNum(100, -100), randomNum(100, -100)]
+      App.b.push randomNum(100, -100)
 
-  # App.a = []
-  # App.b = []
-  # for i in [0..999]
-  #   App.a.push [randomNum(100, -100), randomNum(100, -100)]
-  #   App.b.push randomNum(100, -100)
-
-  # $('#load-file').click()
-  # $('#calculate').click()
+    printInputData()
+    $('#calculate').click()

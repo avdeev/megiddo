@@ -1,6 +1,6 @@
 (function() {
   $(function() {
-    var $formInputData, $function, $restrictions, addRestriction, randomNum, restrictionTemplate, setFunction;
+    var $formInputData, $function, $restrictions, addRestriction, printInputData, randomNum, restrictionTemplate, setFunction;
     $restrictions = $('#restrictions');
     $function = $('#function');
     $formInputData = $('#form-input-data');
@@ -30,6 +30,24 @@
         return $function.find('input[name="c2"]').val(parseInt(c2));
       }
     };
+    printInputData = function() {
+      var i, _, _i, _len, _ref, _results;
+      setFunction(App.c[0], App.c[1]);
+      $restrictions.empty();
+      _ref = App.a;
+      _results = [];
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        _ = _ref[i];
+        _results.push(addRestriction(App.a[i][0], App.a[i][1], App.b[i]));
+      }
+      return _results;
+    };
+    randomNum = function(max, min) {
+      if (min == null) {
+        min = 0;
+      }
+      return Math.floor(Math.random() * (max - min) + min);
+    };
     $('#restrictions-add').on('click', function() {
       return addRestriction();
     });
@@ -37,7 +55,7 @@
       return e.preventDefault();
     });
     $('#calculate').on('click', function() {
-      var $output, a, arrayData, b, c, input, value, _i, _len;
+      var $output, a, arrayData, b, c, input, start, stop, value, _i, _len;
       arrayData = $formInputData.serializeArray();
       c = [];
       a = [];
@@ -64,34 +82,42 @@
         }
       }
       App.megiddoSolver = new App.MegiddoSolver(a, b, c);
+      start = Date.now();
       App.megiddoSolver.solve();
+      stop = Date.now();
       $output = $('#output');
       $output.empty();
+      $output.append($('<h2>Мегиддо</h2>'));
       $output.append($('<pre>').text("I = " + (JSON.stringify(App.megiddoSolver.I, null, 2))));
-      $output.append($('<pre>').text("U = " + (JSON.stringify(App.megiddoSolver.U))));
-      $output.append($('<pre>').text("result = " + App.megiddoSolver.result));
-      return $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
+      $output.append($('<pre>').text("result = " + (App.megiddoSolver.result != null ? App.megiddoSolver.result : 'задача неразрешима')));
+      $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
+      $output.append($('<pre>').text("Время выполнения: " + (stop - start) + " ms"));
+      App.megiddoSolver = new App.MegiddoSolver(a, b, c);
+      start = Date.now();
+      App.megiddoSolver.solveBySimplex();
+      stop = Date.now();
+      $output.append($('<h2>Симплекс</h2>'));
+      $output.append($('<pre>').text("result = " + (App.megiddoSolver.result != null ? App.megiddoSolver.result : 'задача неразрешима')));
+      $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
+      return $output.append($('<pre>').text("Время выполнения: " + (stop - start) + " ms"));
     });
     $('#load-file').on('click', function() {
-      var i, _, _i, _len, _ref, _results;
-      if (App.a && App.b && App.c) {
-        setFunction(App.c[0], App.c[1]);
-        $restrictions.empty();
-        _ref = App.a;
-        _results = [];
-        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-          _ = _ref[i];
-          _results.push(addRestriction(App.a[i][0], App.a[i][1], App.b[i]));
-        }
-        return _results;
-      }
+      loadFromFile();
+      return printInputData();
     });
-    return randomNum = function(max, min) {
-      if (min == null) {
-        min = 0;
+    return $('#random-calc').on('click', function() {
+      var i, restrictionCount, _i, _ref;
+      loadFromFile();
+      restrictionCount = 100;
+      App.a = [];
+      App.b = [];
+      for (i = _i = 0, _ref = restrictionCount - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+        App.a.push([randomNum(100, -100), randomNum(100, -100)]);
+        App.b.push(randomNum(100, -100));
       }
-      return Math.floor(Math.random() * (max - min) + min);
-    };
+      printInputData();
+      return $('#calculate').click();
+    });
   });
 
 }).call(this);

@@ -1,6 +1,6 @@
 window.App ||= {}
 class App.MegiddoSolver
-  result: null
+  result: undefined
   point: {}
 
   constructor: (@a, @b, @c) ->
@@ -191,7 +191,11 @@ class App.MegiddoSolver
     solver.addConstraint new c.Equation z, new c.Expression(x, -1 * @c[0]).plus(new c.Expression(y, -1 * @c[1]))
 
     for _, i in @a when @isRestrictionExist(i)
-      solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])
+      try
+        solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])  
+      catch error
+        # задача неразрешима
+        return false
 
     solver.optimize(z)
     solver.resolve()

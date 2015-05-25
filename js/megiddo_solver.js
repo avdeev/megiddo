@@ -4,7 +4,7 @@
   window.App || (window.App = {});
 
   App.MegiddoSolver = (function() {
-    MegiddoSolver.prototype.result = null;
+    MegiddoSolver.prototype.result = void 0;
 
     MegiddoSolver.prototype.point = {};
 
@@ -458,7 +458,7 @@
     };
 
     MegiddoSolver.prototype.solveBySimplex = function() {
-      var i, solver, x, y, z, _, _i, _len, _ref;
+      var error, i, solver, x, y, z, _, _i, _len, _ref;
       solver = new c.SimplexSolver();
       x = new c.Variable({
         name: 'x'
@@ -474,7 +474,12 @@
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         _ = _ref[i];
         if (this.isRestrictionExist(i)) {
-          solver.addConstraint(new c.Inequality(new c.Expression(x, this.a[i][0]).plus(new c.Expression(y, this.a[i][1])), c.LEQ, this.b[i]));
+          try {
+            solver.addConstraint(new c.Inequality(new c.Expression(x, this.a[i][0]).plus(new c.Expression(y, this.a[i][1])), c.LEQ, this.b[i]));
+          } catch (_error) {
+            error = _error;
+            return false;
+          }
         }
       }
       solver.optimize(z);
