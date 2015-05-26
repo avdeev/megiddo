@@ -4,6 +4,9 @@ class App.MegiddoSolver
   UNSOLVABLE = 1
   SOLVED = 2
 
+  result:
+    status: UNSOLVED
+
   constructor: (@a, @b, @c) ->
     @removedRestrictions = []
 

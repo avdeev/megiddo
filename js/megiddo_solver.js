@@ -12,6 +12,10 @@
 
     SOLVED = 2;
 
+    MegiddoSolver.prototype.result = {
+      status: UNSOLVED
+    };
+
     function MegiddoSolver(a, b, c) {
       this.a = a;
       this.b = b;
