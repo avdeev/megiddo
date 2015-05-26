@@ -1,7 +1,8 @@
 window.App ||= {}
 class App.MegiddoSolver
-  result: undefined
-  point: {}
+  UNSOLVED = 0
+  UNSOLVABLE = 1
+  SOLVED = 2
 
   constructor: (@a, @b, @c) ->
     @removedRestrictions = []
@@ -19,7 +20,7 @@ class App.MegiddoSolver
       @setI()
       break if @restrictionCount() <= 4
 
-    if @restrictionCount() > 0
+    if @restrictionCount() > 0 and @result.status is UNSOLVED
       @solveBySimplex()
 
   setAlpha: ->
@@ -162,7 +163,7 @@ class App.MegiddoSolver
 
       if @f['-'].val - @f['+'].val > 0
         if @f['-'].r >= @f['+'].r and @f['-'].l <= @f['+'].l
-          # задача неразрешима
+          @result.status = UNSOLVABLE
           return false
         else
           if @f['-'].r < @f['+'].r
@@ -174,8 +175,25 @@ class App.MegiddoSolver
           if @f['+'].r > 0  and @f['+'].r <= @f['+'].l
             @removeMediansLeft x
           else
-            # нашли!
-            @result = x
+            i = x.i
+            j = x.j
+
+            A1 = @a[i][0]
+            B1 = @a[i][1]
+            A2 = @a[j][0]
+            B2 = @a[j][1]
+            C1 = - @b[i]
+            C2 = - @b[j]
+
+            x = - (C1 * B2 - C2 * B1) / (A1 * B2 - A2 * B1)
+            y = - (A1 * C2 - A2 * C1) / (A1 * B2 - A2 * B1)
+
+            @result = 
+              status: SOLVED
+              point: 
+                x: x
+                y: y
+              val: @c[0] * x + @c[1] * y
             return false
         else
           if @f['+'].r < 0
@@ -194,12 +212,15 @@ class App.MegiddoSolver
       try
         solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])  
       catch error
-        # задача неразрешима
+        @result.status = UNSOLVABLE
         return false
 
     solver.optimize(z)
     solver.resolve()
 
-    @result = (@c[0] * x.value + @c[1] * y.value).toFixed(3)
-    @point.x = x.value.toFixed(3)
-    @point.y = y.value.toFixed(3)
+    @result =
+      status: SOLVED
+      val: (@c[0] * x.value + @c[1] * y.value).toFixed(3)
+      point:
+        x: x.value.toFixed(3)
+        y: y.value.toFixed(3)

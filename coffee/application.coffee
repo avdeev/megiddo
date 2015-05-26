@@ -63,8 +63,7 @@ $ ->
     $output.empty()
     $output.append $('<h2>Мегиддо</h2>')
     $output.append $('<pre>').text "I = #{JSON.stringify(App.megiddoSolver.I, null, 2)}"
-    $output.append $('<pre>').text "result = #{if App.megiddoSolver.result? then App.megiddoSolver.result else 'задача неразрешима'}"
-    $output.append $('<pre>').text "point = [#{App.megiddoSolver.point.x}, #{App.megiddoSolver.point.y}]"
+    $output.append $('<pre>').text "result = #{JSON.stringify(App.megiddoSolver.result, null, 2)}"
     $output.append $('<pre>').text "Время выполнения: #{stop - start} ms"
 
     App.megiddoSolver = new App.MegiddoSolver a, b, c
@@ -74,8 +73,7 @@ $ ->
     stop = Date.now()
 
     $output.append $('<h2>Симплекс</h2>')
-    $output.append $('<pre>').text "result = #{if App.megiddoSolver.result? then App.megiddoSolver.result else 'задача неразрешима'}"
-    $output.append $('<pre>').text "point = [#{App.megiddoSolver.point.x}, #{App.megiddoSolver.point.y}]"
+    $output.append $('<pre>').text "result = #{JSON.stringify(App.megiddoSolver.result, null, 2)}"
     $output.append $('<pre>').text "Время выполнения: #{stop - start} ms"
 
   $('#load-file').on 'click', ->

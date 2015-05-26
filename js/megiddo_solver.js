@@ -4,9 +4,13 @@
   window.App || (window.App = {});
 
   App.MegiddoSolver = (function() {
-    MegiddoSolver.prototype.result = void 0;
+    var SOLVED, UNSOLVABLE, UNSOLVED;
 
-    MegiddoSolver.prototype.point = {};
+    UNSOLVED = 0;
+
+    UNSOLVABLE = 1;
+
+    SOLVED = 2;
 
     function MegiddoSolver(a, b, c) {
       this.a = a;
@@ -30,7 +34,7 @@
           break;
         }
       }
-      if (this.restrictionCount() > 0) {
+      if (this.restrictionCount() > 0 && this.result.status === UNSOLVED) {
         return this.solveBySimplex();
       }
     };
@@ -423,7 +427,7 @@
     };
 
     MegiddoSolver.prototype.findMax = function() {
-      var x;
+      var A1, A2, B1, B2, C1, C2, i, j, x, y;
       while (this.medians.length) {
         x = this.findMediana(this.medians);
         this.f = {
@@ -432,6 +436,7 @@
         };
         if (this.f['-'].val - this.f['+'].val > 0) {
           if (this.f['-'].r >= this.f['+'].r && this.f['-'].l <= this.f['+'].l) {
+            this.result.status = UNSOLVABLE;
             return false;
           } else {
             if (this.f['-'].r < this.f['+'].r) {
@@ -445,7 +450,24 @@
             if (this.f['+'].r > 0 && this.f['+'].r <= this.f['+'].l) {
               this.removeMediansLeft(x);
             } else {
-              this.result = x;
+              i = x.i;
+              j = x.j;
+              A1 = this.a[i][0];
+              B1 = this.a[i][1];
+              A2 = this.a[j][0];
+              B2 = this.a[j][1];
+              C1 = -this.b[i];
+              C2 = -this.b[j];
+              x = -(C1 * B2 - C2 * B1) / (A1 * B2 - A2 * B1);
+              y = -(A1 * C2 - A2 * C1) / (A1 * B2 - A2 * B1);
+              this.result = {
+                status: SOLVED,
+                point: {
+                  x: x,
+                  y: y
+                },
+                val: this.c[0] * x + this.c[1] * y
+              };
               return false;
             }
           } else {
@@ -478,15 +500,21 @@
             solver.addConstraint(new c.Inequality(new c.Expression(x, this.a[i][0]).plus(new c.Expression(y, this.a[i][1])), c.LEQ, this.b[i]));
           } catch (_error) {
             error = _error;
+            this.result.status = UNSOLVABLE;
             return false;
           }
         }
       }
       solver.optimize(z);
       solver.resolve();
-      this.result = (this.c[0] * x.value + this.c[1] * y.value).toFixed(3);
-      this.point.x = x.value.toFixed(3);
-      return this.point.y = y.value.toFixed(3);
+      return this.result = {
+        status: SOLVED,
+        val: (this.c[0] * x.value + this.c[1] * y.value).toFixed(3),
+        point: {
+          x: x.value.toFixed(3),
+          y: y.value.toFixed(3)
+        }
+      };
     };
 
     return MegiddoSolver;

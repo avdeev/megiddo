@@ -89,16 +89,14 @@
       $output.empty();
       $output.append($('<h2>Мегиддо</h2>'));
       $output.append($('<pre>').text("I = " + (JSON.stringify(App.megiddoSolver.I, null, 2))));
-      $output.append($('<pre>').text("result = " + (App.megiddoSolver.result != null ? App.megiddoSolver.result : 'задача неразрешима')));
-      $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
+      $output.append($('<pre>').text("result = " + (JSON.stringify(App.megiddoSolver.result, null, 2))));
       $output.append($('<pre>').text("Время выполнения: " + (stop - start) + " ms"));
       App.megiddoSolver = new App.MegiddoSolver(a, b, c);
       start = Date.now();
       App.megiddoSolver.solveBySimplex();
       stop = Date.now();
       $output.append($('<h2>Симплекс</h2>'));
-      $output.append($('<pre>').text("result = " + (App.megiddoSolver.result != null ? App.megiddoSolver.result : 'задача неразрешима')));
-      $output.append($('<pre>').text("point = [" + App.megiddoSolver.point.x + ", " + App.megiddoSolver.point.y + "]"));
+      $output.append($('<pre>').text("result = " + (JSON.stringify(App.megiddoSolver.result, null, 2))));
       return $output.append($('<pre>').text("Время выполнения: " + (stop - start) + " ms"));
     });
     $('#load-file').on('click', function() {
