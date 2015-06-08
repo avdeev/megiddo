@@ -245,8 +245,8 @@
       return _results;
     };
 
-    MegiddoSolver.prototype.findMediana = function(arr) {
-      this.medians.sort(function(a, b) {
+    MegiddoSolver.prototype.sortMedians = function(arr) {
+      return arr.sort(function(a, b) {
         if (a.val < b.val) {
           return -1;
         } else if (a.val > b.val) {
@@ -255,7 +255,21 @@
           return 0;
         }
       });
-      return this.medians[Math.floor((arr.length - 1) / 2)];
+    };
+
+    MegiddoSolver.prototype.findMediana = function(arr) {
+      var arrCopies, m;
+      if (arr.length < 74) {
+        return this.sortMedians(arr)[Math.floor((arr.length - 1) / 2)];
+      } else {
+        arrCopies = [];
+        m = 0;
+        while (m < Math.floor(arr.length / 5)) {
+          arrCopies.push(this.sortMedians(arr.slice(m * 5, +((m + 1) * 5) + 1 || 9e9))[2]);
+          m++;
+        }
+        return this.findMediana(arrCopies);
+      }
     };
 
     MegiddoSolver.prototype.FPlus = function(x) {

@@ -39,7 +39,7 @@ class App.MegiddoSolver
     @I['0'] = (i for alpha, i in @alpha when alpha[1] is 0 and @isRestrictionExist(i))
     @I['+'] = (i for alpha, i in @alpha when alpha[1] > 0 and @isRestrictionExist(i))
     @I['-'] = (i for alpha, i in @alpha when alpha[1] < 0 and @isRestrictionExist(i))
-      
+
   setU: ->
     @U = []
 
@@ -104,13 +104,22 @@ class App.MegiddoSolver
         else
           @medians.push i: i, j: j, val: x, sign: '-'
 
-  findMediana: (arr) ->
-    @medians.sort (a, b) ->
+  sortMedians: (arr) ->
+    arr.sort (a, b) ->
       if a.val < b.val then -1
       else if a.val > b.val then 1
       else 0
 
-    @medians[Math.floor((arr.length - 1) / 2)]
+  findMediana: (arr) ->
+    if arr.length < 74
+      @sortMedians(arr)[Math.floor((arr.length - 1) / 2)]
+    else
+      arrCopies = []
+      m = 0
+      while m < Math.floor(arr.length / 5)
+        arrCopies.push @sortMedians(arr[(m * 5)..((m + 1) * 5)])[2]
+        m++
+      @findMediana arrCopies
 
   FPlus: (x) ->
     Y = (val: @delta[i] * x.val + @gamma[i], i: i for i in @I['+'] when @isRestrictionExist(i))
@@ -160,9 +169,9 @@ class App.MegiddoSolver
     while @medians.length
       x = @findMediana @medians
 
-      @f = 
+      @f =
         '+': @FPlus x
-        '-': @FMinus x 
+        '-': @FMinus x
 
       if @f['-'].val - @f['+'].val > 0
         if @f['-'].r >= @f['+'].r and @f['-'].l <= @f['+'].l
@@ -191,9 +200,9 @@ class App.MegiddoSolver
             x = - (C1 * B2 - C2 * B1) / (A1 * B2 - A2 * B1)
             y = - (A1 * C2 - A2 * C1) / (A1 * B2 - A2 * B1)
 
-            @result = 
+            @result =
               status: SOLVED
-              point: 
+              point:
                 x: x
                 y: y
               val: @c[0] * x + @c[1] * y
@@ -203,7 +212,7 @@ class App.MegiddoSolver
             @removeMediansRight x
 
   solveBySimplex: ->
-    solver = new c.SimplexSolver() 
+    solver = new c.SimplexSolver()
 
     x = new c.Variable name: 'x'
     y = new c.Variable name: 'y'
@@ -213,7 +222,7 @@ class App.MegiddoSolver
 
     for _, i in @a when @isRestrictionExist(i)
       try
-        solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])  
+        solver.addConstraint(new c.Inequality new c.Expression(x, @a[i][0]).plus(new c.Expression(y, @a[i][1])), c.LEQ, @b[i])
       catch error
         @result.status = UNSOLVABLE
         return false

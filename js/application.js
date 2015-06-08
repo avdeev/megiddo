@@ -88,7 +88,6 @@
       $output = $('#output');
       $output.empty();
       $output.append($('<h2>Мегиддо</h2>'));
-      $output.append($('<pre>').text("I = " + (JSON.stringify(App.megiddoSolver.I, null, 2))));
       $output.append($('<pre>').text("result = " + (JSON.stringify(App.megiddoSolver.result, null, 2))));
       $output.append($('<pre>').text("Время выполнения: " + (stop - start) + " ms"));
       App.megiddoSolver = new App.MegiddoSolver(a, b, c);
